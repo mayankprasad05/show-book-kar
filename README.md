@@ -11,6 +11,85 @@
 
 ---
 
+# Execution order (the whole project)
+## Block 1 — Foundation (Day 1)
+This is the only shared block and it must finish before anyone else makes real implementation choices.
+
+M: decisions + design note — entities/relationships, table names/keys, status values with allowed transitions, and the open rules from README §1.4 (hold duration = 5 min, cancellation cutoff, failed-payment policy = release immediately, repeated-payment handling). Output: database/DESIGN_NOTE.md.
+M: ER diagram (Mermaid in docs/diagrams/er.md).
+All three: agree on P0 scope, table names, status names, and a draft API contract. This is README Phase 0's shared gate — nobody then invents a conflicting schema or API.
+At the end of Day 1, table and status names are locked for the first pass.
+
+## Block 2 — M makes the database real (Days 1–4)
+This is the first concrete deliverable sequence, and it gates H's real backend work.
+
+M: relational mapping from the ER diagram; functional dependencies + 1NF/2NF/3NF reasoning (README §3.4).
+M: database/schema.sql — 11 core tables in dependency order (users → movies → theatres → screens → seats → shows → show_seats → bookings → booking_seats → payments → refunds), identity PKs, named constraints, NOT NULL/CHECK/UNIQUE, the composite PK/FK on show_seats/booking_seats, overlap prevention (exclusion constraint or validated trigger), TIMESTAMPTZ, NUMERIC money, FK actions with no cascade on bookings/payments. README §3.3.
+M: test schema from a completely empty database; run it twice and confirm it fails clearly or is safely repeatable; add SQL comments on non-obvious constraints.
+M, reviewed by H: every constraint H needs for booking/cancellation; H reviews for API fit, flags missing columns/constraints, then names are frozen.
+M, reviewed by S: fields needed to display movies, showtimes, seats, bookings; S checks UI fit.
+M: database/seed.sql — synthetic users, movies, theatres, screens, seats, shows across screens/times, and show_seats for every seeded show.
+M: database/tests/*.sql — negative cases that each fail with the right SQLSTATE (duplicate email 23505, duplicate seat coordinate 23505, duplicate show_seat 23505, invalid price/time 23514, bad FK 23503, overlapping show 23P01).
+M: database/queries.sql — list movies, movie by ID, future shows for a movie/date, show's theatre+screen, seats for a show with statuses/prices, availability count; behave correctly on empty results; indexes only where a real query pattern justifies them.
+Gate (README Phase 1): M demonstrates schema creation from an empty database, seed loads, sample data is reproducible, and Flask can connect to it.
+
+## Block 3 — H builds Flask against the frozen schema in parallel with S's read UI (Days 3–6)
+Once names are frozen, H and S can work in parallel — but only against M's contract, not against their own invented shapes.
+
+H: Flask app + db.py for PostgreSQL connection management, env-based connection config, .gitignore + .env.example, requirements.txt. Health endpoint + database connectivity check + consistent exception handling that never leaks credentials/stack traces. README Phase 0 H.
+H: GET /api/movies, GET /api/movies/<id>, GET /api/shows, GET /api/shows/<id>/seats — parameterized SQL, validate IDs/date filters, 404 for missing IDs, empty arrays for no results, predictable JSON shapes. README §2.2 API contract + Phase 2 H. H also documents the full request/response field list, status codes, and error format so S can build against it.
+S: movie list page, movie detail, showtime list, seat-map layout with legend, loading/empty/error states. All of it driven by the API responses — no hardcoded movie/seat data in the integrated version, and the frontend treats seat availability as display-only while the database stays authoritative. README Phase 1–2 S.
+Shared gate (Phase 2): browse movies and open a seat map from the real database through the browser; seat statuses come from PostgreSQL; no core page relies on fake data.
+## Block 4 — M's booking hold transaction, then H's route that runs it, then S's seat-hold UI (Days 4–6)
+This is the pacing item for everything real: hold, payment, cancellation can't exist until the hold transaction is defined and runnable.
+
+M + H, before either implements: decide the one authoritative path for the booking logic — parameterized SQL in the service or a PostgreSQL function. README recommends a database function for a DBMS project because locking/atomicity can be demonstrated in two psql sessions without the backend. Once chosen, it's done once, in one place.
+M: the hold transaction/function — reject duplicate seat IDs, verify all seats belong to the requested show, lock show_seats rows in a consistent order, verify every requested row was found (a lock over found rows says nothing about missing rows), verify all seats are available or are reclaimable expired holds (reclaim only after rechecking expiry, inside the same transaction), insert one bookings + one booking_seats per seat, compute total from database prices, set HELD/held_by_booking_id/expiry, all-of-it commits or rolls back together, a failed hold leaves zero orphan rows. Add a booking-inspection query. Document transaction boundaries and locking in database/TRANSACTION.md. README Phase 3 M.
+H: POST /api/bookings/hold — JSON validation, reject empty list and duplicate seat IDs and oversized/malformed requests, run one transaction for the whole hold, compute price on server/database, commit on success, rollback on any unavailable seat or exception, return booking ID/status/expiry/amount, return HTTP 409 + safe message on conflict, never leave an open transaction on failure. Tests for one-seat, multi-seat, and one-unavailable-seat-among-many → the last one must hold none of the seats. README Phase 3 H.
+S: seat-selection UI — render seats from the API, select multiple available seats, show selected labels, provisional display total that is clearly subordinate to the authoritative backend total, disable continue with no selection, submit show ID + seat IDs to the hold API, on success save/display booking ID, on conflict show a message and refresh the seat map, handle network/server errors, prevent double-click duplicates, don't mark seats as booked just because the user picked them, show hold expiry. README Phase 3 S.
+Shared gate (Phase 3): a valid hold creates exactly one booking and the right seat rows; a conflicting hold creates no partial reservation; the database decides availability; M and H can explain row locking + rollback, S can show the conflict state.
+## Block 5 — Payment, confirmation, expiry (Days 6–7)
+M: payment status constraints + booking/payment state-transition table (enforced in the transaction/function — a CHECK alone doesn't enforce order); ensure payment amount = booking amount; repeated-payment handling; constraints/indexes for transaction references and booking lookup; SQL for successful confirmation (insert/update payment, confirm booking, mark seats BOOKED atomically); SQL for failed payment (record failure, release hold per the agreed policy); SQL to release expired holds safely (only seats still held by the same booking, never a confirmed or reassigned seat); tests for expired/confirmed/already-released holds and a late payment attempt. README Phase 4 M.
+H: POST /api/bookings/<id>/pay — accept a controlled success/failure simulation only (never arbitrary payment amount from the client), lock booking + seat records, verify status and hold expiry, on success atomically insert/update payment + confirm booking + mark seats BOOKED, on failure record failure and release per policy, reject expired/cancelled bookings, make repeated requests idempotent, implement a simple expiry function/task or admin-triggered expiry endpoint. Tests for success/failure/repeats/late attempts. README Phase 4 H.
+S: checkout/order summary with seat labels + show details + server-calculated total, clearly labeled simulated success/failure controls, confirmation + booking ID display, payment-failure without fake confirmation, expired-hold handling, refresh seat map after success/failure, add "My bookings" link, screenshots for both flows. README Phase 4 S.
+Shared gate (Phase 4): success confirms, failure does not, expiry frees abandoned seats only, repeats don't duplicate payments.
+## Block 6 — Cancellation, refund records, booking history (Days 7–8)
+M: cancellation eligibility rule + refund status values; refunds constraints/indexes (nonnegative amounts, valid statuses, refunded total ≤ refundable, partial vs full distinguished, original payment retained); cancellation transaction that releases only the target booking's own seats and never deletes booking/payment history; booking-history and payment/refund history queries; tests for duplicate/late/invalid-state cancellation. README Phase 5 M.
+H: GET /api/bookings, GET /api/bookings/<id> with ownership/authorization; POST /api/bookings/<id>/cancel — verify status and cutoff, lock booking/seats and run the transaction, record refund request/status if applicable, return current booking/payment/refund states, safe errors for already-cancelled/ineligible, one user can't cancel another's booking. README Phase 5 H.
+S: booking-history page — movie, showtime, seat labels, amount, booking status; cancellation button only when eligible, with confirmation; show cancellation/refund status; refresh after cancellation; clear error messages; empty-history and multiple-bookings cases. README Phase 5 S.
+Shared gate (Phase 5): history preserved, released seats available only per policy, refund state explicit, cross-user access blocked.
+## Block 7 — Auth and admin CRUD (Days 8–11)
+M: role storage decision (role column on users or separate admin table), account uniqueness/validation, safe deletion rules for movies/shows with bookings (never destroy referenced booking/payment history), admin queries for movies/theatres/screens/seats/shows, constraints for admin-created records; re-review any schema change with H before it lands. README Phase 6 M.
+H: registration/login if in final scope (hash passwords with a standard lib, no plaintext), session/auth mechanism, protect booking routes, protect admin routes with role checks, admin create/update/list routes for movies/theatres/screens, seat setup for screens, show scheduling with start/end validation, prevent overlapping shows on the same screen, parameterized queries + input validation, test unauthenticated and non-admin access to admin routes. README Phase 6 H.
+S: login/register screens if in scope, role-based navigation, admin movie/theatre/screen management forms/tables, seat setup UI or documented seed-data workflow, show scheduling form, display API validation errors, confirm before destructive actions, customer UI never exposes admin controls as a security substitute. README Phase 6 S.
+Shared gate (Phase 6): admin actions protected on the backend, invalid data rejected by both validation and constraints, booking history intact after catalogue changes.
+## Block 8 — Views, reports, audit, indexes (Days 11–14)
+M: database/views.sql — show-availability view, booking-history view; reports — bookings by movie/show, successful payment amounts, cancellation/refund report — never counting failed payments as collected money and never double-counting across one-to-many joins; optional audit table + one clear source of truth (trigger OR service-level insert, not both); database/indexes.sql for real filter/join patterns, each with a SQL comment; EXPLAIN ANALYZE before/after, documented trade-offs, with measured evidence only; test every report against hand-calculated sample data. README Phase 7 M.
+H: report endpoints using DB views/queries instead of duplicating calculations in Python, date-filter/pagination validation, admin authorization on reports, consistent numeric/decimal values, tests for empty date ranges and multiple payments/refunds, review transaction behavior for major endpoints. README Phase 7 H.
+S: admin dashboard summary cards, booking/revenue/cancellation report tables, date filters if time permits, empty states, optional audit-event list, snapshots for the report; labels that distinguish gross successful payments, refunds, and net amount. README Phase 7 S.
+Shared gate (Phase 7): every report matches hand calculations, index claims backed by recorded query plans, no report double-counts payments/refunds.
+## Block 9 — Integration, QA, concurrency evidence (Days 14–16)
+All three run the shared test scenarios (README Phase 8): one-seat hold, multi-seat hold, one-unavailable-seat fails the whole hold, two sessions fight for the same seat (only one wins), two sessions take different seats (both win), payment succeeds, payment fails, repeated payment (idempotent), hold expires, late payment rejected, confirmation cancelled within window, ineligible cancellation rejected, a user trying another user's booking is blocked, unauthenticated/non-admin trying admin operations is blocked, reports match manual calculations.
+M: re-run all schema/constraint tests from a clean database; verify FKs, composite keys, status constraints, expiry/cancellation SQL; help run the two-session locking test; save scripts and screenshots/logs as evidence; review the final schema against the ER diagram. README Phase 8 M.
+H: run backend unit/integration tests; test rollback on every failure path; confirm every DB connection/transaction is closed or rolled back; two simultaneous booking requests from separate sessions → correct conflict responses, no duplicate reservation; record steps and results; test missing DB connection behavior. README Phase 8 H.
+S: test every customer page end-to-end, every admin form, on the agreed browser/screen size, for loading/empty/conflict/success/server-error states; verify seat-map updates after hold/payment/expiry/cancellation; check navigation, refresh, labels, currency formatting, timestamps; capture final screenshots; list UI bugs and fix P0 first. README Phase 8 S.
+Shared gate (Phase 8): all P0 test cases pass, known issues written down, no critical booking-integrity bug remains.
+## Block 10 — Documentation and final demo (Days 16–18)
+M: finalize ER diagram + relational schema + data dictionary; complete §3.4 normalization write-up; document PKs/FKs/UNIQUE/CHECK; document transaction boundaries + row locking; document the concurrency test and observed result; document indexes + query-plan comparison; document views/functions/triggers/audit logic; provide a clean database setup script; prepare DBMS viva Q&A. README Phase 9 M.
+H: document installation + env config, how to start Flask, all API routes + request/response formats, booking service + transaction handling, error handling + authorization, dependency install commands; verify the app starts from a fresh clone using the README; backend walkthrough for the demo. README Phase 9 H.
+S: abstract + problem statement, objectives + scope, requirements + use cases, architecture + ER diagrams, screenshots of all key workflows, test plan + results, limitations + future work, slide deck, short live demo sequence (ensuring screenshots don't expose secrets or personal data), assembled report checked for formatting/spelling/terminology. README Phase 9 S.
+Shared final review (Phase 9): all three can explain every table and relationship and can explain why show_seats exists, why the hold locks rows, rollback/atomicity, how duplicate-seat booking is prevented, and the limits of simulated payment; everyone can run the project from the README; run the full demo at least twice on a clean known dataset; tag the final version in Git.
+What "implementing the whole project" actually produces
+The README §6 repository structure is the target. In execution order that means:
+
+database/: schema.sql, seed.sql, queries.sql, indexes.sql, views.sql, functions.sql, triggers.sql, tests/ (including negative-constraint tests and the concurrency test), DESIGN_NOTE.md, TRANSACTION.md.
+backend/: app.py, db.py, routes/, services/, tests/.
+frontend/: templates/, static/css/, static/js/.
+docs/: diagrams/ (ER), screenshots/, test-results/ (constraint transcripts, concurrency logs), report/.
+Root: README.md, PROJECT_PLAN.md, .gitignore, .env.example, requirements.txt, tests/test_plan.md, tests/test_concurrency.md.
+
+---
+
 ## Contents
 
 - [0. How to use this plan](#0-how-to-use-this-plan)
