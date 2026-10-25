@@ -1,0 +1,33 @@
+# ==============================================================================
+# Show-book-kar — Python Dependencies (requirements.txt)
+# Stack: PostgreSQL + Python Flask + HTML/CSS/JS
+# Compatible across: Windows, macOS, Linux (Zero compilation prerequisites)
+# ==============================================================================
+
+# Core Web Framework
+Flask>=3.0.0,<4.0.0
+
+# Cross-Origin Resource Sharing (Allows frontend JS to fetch from backend locally)
+Flask-Cors>=4.0.0,<5.0.0
+
+# PostgreSQL Driver (Pre-compiled binary wheel: works out-of-the-box on any OS without C++ build tools / pg_config)
+psycopg2-binary>=2.9.9,<3.0.0
+
+# Environment Variable Management (.env support for DB credentials and secret keys)
+python-dotenv>=1.0.1,<2.0.0
+
+# Secure Password Hashing (Required by README §4 Phase 6: no plaintext passwords)
+bcrypt>=4.1.2,<5.0.0
+
+# Date and Timestamp Utilities (Safe ISO-8601 parsing for shows, hold expiry, and TIMESTAMPTZ)
+python-dateutil>=2.8.2,<3.0.0
+
+# Testing & QA (Required by README Phase 8 for unit, integration, and rollback tests)
+pytest>=8.0.0,<9.0.0
+
+# HTTP Client for Concurrency & Integration Testing (README Phase 8: 2 concurrent sessions competing for seats)
+requests>=2.31.0,<3.0.0
+
+# Cross-platform Production WSGI Server (Pure Python, runs reliably on Windows, macOS, and Linux)
+waitress>=3.0.0,<4.0.0
+
