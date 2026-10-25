@@ -1,0 +1,20 @@
+-- ============================================================================
+-- Show-book-kar — hold-expiry tests
+-- Owner: M | Reviewer: H
+-- ============================================================================
+--
+-- Tests the hold expiry rules:
+--   1. An expired hold is reclaimed (status back to AVAILABLE, owner cleared)
+--      only after rechecking the expiry inside the same transaction.
+--   2. A late expiry cannot free a confirmed or reassigned seat.
+--   3. Expired holds are reclaimed only for the same booking that owns the
+--      hold (never a confirmed or reassigned seat).
+--
+-- These tests assume the hold/expiry SQL is implemented in functions.sql and
+-- are run against a scratch database. They are positive tests for the
+-- expiry-release path.
+--
+-- Expected SQLSTATEs:
+--   23503  if a held seat is reassigned or released by another booking
+--   23505  if a duplicate hold exists
+-- ============================================================================

@@ -1,0 +1,17 @@
+-- ============================================================================
+-- Show-book-kar — payment/refund tests
+-- Owner: M | Reviewer: H
+-- ============================================================================
+--
+-- Positive and negative tests for the payment/confirmation/refund path:
+--   1. Successful simulated payment confirms the booking and BOOKs the seats.
+--   2. Failed payment records the failure and releases the hold (v1 policy).
+--   3. Repeated payment is idempotent — no duplicate successful payments.
+--   4. Late payment is rejected.
+--   5. Refund: amount cannot exceed refundable; partial vs full is explicit.
+--   6. Original payment history is retained after cancellation/refund.
+--
+-- Expected SQLSTATEs:
+--   23503  if a payment/cancellation references a missing booking
+--   23514  if a refund amount exceeds the refundable amount
+-- ============================================================================

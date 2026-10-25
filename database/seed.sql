@@ -1,0 +1,17 @@
+-- ============================================================================
+-- Show-book-kar — seed data
+-- Owner: M | Reviewer: H, S
+-- ============================================================================
+--
+-- NOTE: no seed rows are included yet. The schema is being created first and
+-- the database is deliberately empty. Once the team agrees table/column names
+-- and H/S review the schema for API and UI fit, this file will be filled in
+-- with synthetic users, movies, theatres, screens, seats, shows, and
+-- show_seats rows for the seeded shows.
+--
+-- Seed data is designed to be reproducible. Hash passwords with a standard
+-- password-hashing library; never store plaintext passwords.
+--
+-- To load (after schema.sql):
+--   psql -v ON_ERROR_STOP=1 -f database/seed.sql
+-- ============================================================================

@@ -1,0 +1,15 @@
+-- ============================================================================
+-- Show-book-kar — report tests
+-- Owner: M | Reviewer: H, S
+-- ============================================================================
+--
+-- Every report must match hand-calculated values on the seeded data. These
+-- tests verify:
+--   1. Revenue reports never count failed payments as collected money.
+--   2. Reports never double-count rows when joining one-to-many relations.
+--   3. Booking/history and payment/refund history queries are correct.
+--   4. Availability and revenue figures are consistent with the base tables.
+--
+-- Run against the seed database and compare with manual totals from the
+-- seed script. Any mismatch means the report SQL is wrong, not the data.
+-- ============================================================================

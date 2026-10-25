@@ -1,0 +1,20 @@
+-- ============================================================================
+-- Show-book-kar — concurrency test
+-- Owner: M | Reviewer: H
+-- ============================================================================
+--
+-- Two sessions attempt to hold the SAME seat on the same show.
+-- Expected result: only ONE session wins; the other gets a conflict (409/
+-- SEAT_UNAVAILABLE) and creates NO duplicate reservation.
+--
+-- Steps:
+--   1. Session A and Session B both issue a hold for the same show + seat.
+--   2. Session A locks the show_seats row with FOR UPDATE.
+--   3. Session B blocks on the lock.
+--   4. After A commits, B re-reads and finds the seat now HELD -> fails
+--      atomically with no partial reservation.
+--
+-- Also test: two sessions take DIFFERENT seats -> both win.
+--
+-- Evidence: save output to docs/test-results/concurrency-test.log.
+-- ============================================================================

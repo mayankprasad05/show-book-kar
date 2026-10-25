@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment / secrets
+.env
+.env.*
+!*.env.example
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Database / runtime
+*.sqlite3
+*.db
+*.dump
+*.backup
+*.psql
+*.sql.bak
+*.sql.gz
+*.sqlite
+*.sqlite3-journal
+
+# Logs
+*.log
+logs/
+
+# Generated SQL / report artifacts
+database/scripts/load_schema.sql
+database/scripts/reset_database.sql
+docs/test-results/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
