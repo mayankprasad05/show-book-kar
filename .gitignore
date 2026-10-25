@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Python
 __pycache__/
 *.py[cod]
@@ -45,3 +46,27 @@ docs/test-results/
 Thumbs.db
 *.swp
 *~
+=======
+# Python virtual environment and bytecode
+.venv/
+env/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables and secrets
+.env
+
+# Testing and coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Operating system / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+>>>>>>> 99213c6ed8d64935c9203a87518d9daaca3ae761
