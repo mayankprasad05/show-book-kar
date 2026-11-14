@@ -1,0 +1,11 @@
+-- database/scripts/reset_database.sql
+-- WARNING: this spools/deletes existing data. Run only on a clean or empty
+-- database when you want to wipe and rebuild from schema.sql + seed.sql.
+--
+-- Steps (one at a time, with ON_ERROR_STOP=1):
+--   1. DROP SCHEMA public CASCADE; CREATE SCHEMA public;
+--   2. \i database/schema.sql
+--   3. \i database/seed.sql
+--   4. Verify: \dt, \d+ show_seats, availability count
+--
+-- Use this script only for development resets, not for production data.

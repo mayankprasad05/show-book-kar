@@ -1,5 +1,5 @@
 -- ============================================================================
--- Show-book-kar — indexes
+-- Show-book-kar - indexes
 -- Owner: M | Reviewer: H (justifies each pattern) then S (checks UI reads)
 -- ============================================================================
 --

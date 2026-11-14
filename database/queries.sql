@@ -1,5 +1,5 @@
 -- ============================================================================
--- Show-book-kar — read queries
+-- Show-book-kar - read queries
 -- Owner: M | Reviewer: H (for API fit) then S (for UI fields)
 -- ============================================================================
 --

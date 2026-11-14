@@ -1,72 +1,70 @@
-<<<<<<< HEAD
+# ---------------------------------------------------------------------------
 # Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-env/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-
-# Environment / secrets
-.env
-.env.*
-!*.env.example
-
-# Virtual environments
-venv/
-.venv/
-env/
-ENV/
-
-# Database / runtime
-*.sqlite3
-*.db
-*.dump
-*.backup
-*.psql
-*.sql.bak
-*.sql.gz
-*.sqlite
-*.sqlite3-journal
-
-# Logs
-*.log
-logs/
-
-# Generated SQL / report artifacts
-database/scripts/load_schema.sql
-database/scripts/reset_database.sql
-docs/test-results/
-
-# OS / editor
-.DS_Store
-Thumbs.db
-*.swp
-*~
-=======
-# Python virtual environment and bytecode
-.venv/
-env/
-venv/
+# ---------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
 
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# ---------------------------------------------------------------------------
 # Environment variables and secrets
+# ---------------------------------------------------------------------------
+# Keep committed templates (backend/.env.example, .env.example); ignore the rest.
 .env
+.env.*
+!.env.example
+!*.env.example
 
-# Testing and coverage artifacts
+# ---------------------------------------------------------------------------
+# Testing, coverage, type-checker and linter caches
+# ---------------------------------------------------------------------------
 .pytest_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
+.mypy_cache/
+.ruff_cache/
 
-# Operating system / IDE files
+# ---------------------------------------------------------------------------
+# Database dumps and local runtime artifacts
+# ---------------------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+*.db
+*.dump
+*.backup
+*.sql.bak
+*.sql.gz
+
+# ---------------------------------------------------------------------------
+# Logs and generated report output
+# ---------------------------------------------------------------------------
+*.log
+logs/
+docs/test-results/
+
+# ---------------------------------------------------------------------------
+# Operating system files
+# ---------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# ---------------------------------------------------------------------------
+# Editors / IDEs
+# ---------------------------------------------------------------------------
 .vscode/
 .idea/
-
->>>>>>> 99213c6ed8d64935c9203a87518d9daaca3ae761

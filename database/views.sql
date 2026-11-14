@@ -1,11 +1,11 @@
 -- ============================================================================
--- Show-book-kar — views
+-- Show-book-kar - views
 -- Owner: M | Reviewer: H (for query shape) then S (for report/dashboard use)
 -- ============================================================================
 --
 -- Views keep the read model separated from the base tables. They are the
 -- source for H's report and S's admin-dashboard queries, and they are
--- refreshed on every read — no denormalised snapshot to keep consistent.
+-- refreshed on every read - no denormalised snapshot to keep consistent.
 -- ============================================================================
 
 -- 1. Show availability view: per-show seat counts for a display

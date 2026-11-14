@@ -1,0 +1,13 @@
+-- database/scripts/load_schema.sql
+-- Recreate the Show-book-kar database from an empty database (no seed data).
+--
+-- Requirements: a PostgreSQL server and the show-book-kar database must
+-- already exist. This script only creates the schema; the database stays
+-- completely empty until seed.sql is loaded.
+--
+--   psql -v ON_ERROR_STOP=1 -h <host> -U <user> -d show-book-kar -f database/schema.sql
+--   psql -v ON_ERROR_STOP=1 -h <host> -U <user> -d show-book-kar -f database/scripts/load_schema.sql
+--
+-- Expected on a second run: "relation ... already exists" errors for every
+-- CREATE TABLE (or a safe repeatable version by design). Never re-run this
+-- against a populated database.

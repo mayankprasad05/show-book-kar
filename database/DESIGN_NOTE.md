@@ -1,4 +1,4 @@
-# Design Note — Show-book-kar
+# Design Note - Show-book-kar
 
 Owner: M | Reviewers: H (API fit), S (UI fields)
 Status: frozen for the first integration pass (Block 2 gate)
@@ -81,7 +81,7 @@ booking is a no-op, never a duplicate.
 | APPROVED  | (terminal)   |
 | REJECTED  | (terminal)   |
 
-## 4. Business rules (README §1.4, agreed before coding)
+## 4. Business rules (README section 1.4, agreed before coding)
 
 - Hold duration: 5 minutes (recommended).
 - Cancellation cutoff: choose a documented rule; default: cancellable within
@@ -112,11 +112,11 @@ booking is a no-op, never a duplicate.
 - [ ] Composite PK on show_seats(show_id, seat_id); composite FK
   booking_seats(show_id, seat_id).
 - [ ] booking show_id consistency enforced via composite FK.
-- [ ] FK actions deliberate — no cascade on bookings/payments.
+- [ ] FK actions deliberate - no cascade on bookings/payments.
 - [ ] created_at on entity tables; TIMESTAMPTZ anywhere time matters.
 - [ ] overlap prevention agreed (exclusion constraint or trigger).
 - [ ] show_seats holds status, hold_expires_at, held_by_booking_id.
-- [ ] prices NUMERIC(10,2) — no floating point.
+- [ ] prices NUMERIC(10,2) - no floating point.
 - [ ] Schema recreated from a clean database; second run fails clearly or is
   safely repeatable.
 - [ ] H reviews constraints; S reviews fields; names frozen.

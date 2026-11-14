@@ -1,5 +1,5 @@
 -- ============================================================================
--- Show-book-kar — constraint negative tests
+-- Show-book-kar - constraint negative tests
 -- Owner: M | Reviewer: H, S
 -- ============================================================================
 --
@@ -45,8 +45,10 @@ ROLLBACK;
 -- to fail at the table/unique level. A self-contained negative test for the
 -- composite PK is shown below.
 BEGIN;
-INSERT INTO show_seats (show_id, seat_id, status) VALUES (1, 1, 'AVAILABLE');
-INSERT INTO show_seats (show_id, seat_id, status) VALUES (1, 1, 'HELD');
+INSERT INTO show_seats (show_id, seat_id, status)
+VALUES (1, 1, 'AVAILABLE');
+INSERT INTO show_seats (show_id, seat_id, status, hold_expires_at, price, held_by_booking_id)
+VALUES (1, 1, 'HELD', NOW() + INTERVAL '5 minutes', 100.00, 1);
 ROLLBACK;
 -- expect: 23505
 
