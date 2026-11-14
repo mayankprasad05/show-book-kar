@@ -23,7 +23,7 @@ show-book-kar/
 ├── README.md                     this file: setup + what is here
 ├── workplan.md                   the full project plan and phase checklist
 ├── .gitignore
-├── .env.example                  flat env template (host/port/user/password style)
+├── .env.example                  environment template (copy to .env, see section 8)
 ├── requirements.txt              Python dependencies for the project
 ├── database/
 │   ├── schema.sql                11 tables, named constraints, indexes section
@@ -47,14 +47,13 @@ show-book-kar/
 │       ├── test_reports.sql
 │       ├── test_concurrency.sql
 │       └── test_concurrency.md
-├── backend/
-│   ├── .env.example              backend env template (DATABASE_URL style)
-│   └── requirements.txt          Flask + PostgreSQL driver
 └── docs/
     └── diagrams/                 ER source files (Mermaid) go here
 ```
 
-`backend/app.py`, `backend/db.py`, `backend/routes/` and `frontend/` do not exist yet. They arrive in Block 3 of the plan once the schema is frozen, which it now is.
+`.env.example` and `requirements.txt` at the repository root are the only configuration templates: use them for the backend (section 8).
+
+There is no `backend/` directory yet: `backend/app.py`, `backend/db.py`, `backend/routes/` and `frontend/` arrive in Block 3 of the plan once the schema is frozen, which it now is. Create `backend/` when you add the first Python file; the env file and dependency list stay at the repository root, as the templates expect.
 
 ---
 
@@ -258,29 +257,40 @@ The script rewrites `database/seed.sql` (LF endings, ASCII only) and prints the 
 
 ## 8. Backend configuration
 
-The backend is not written yet; only its configuration templates exist.
+The backend is not written yet; only the environment template and the dependency list exist, both at the repository root.
+
+Create your local environment file from the template:
 
 ```bash
-cp backend/.env.example backend/.env
+cp .env.example .env
 ```
 
-Then set the connection string in `backend/.env`:
+Then edit `.env` and set the database values to match the database you created in section 5:
 
 ```text
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/show-book-kar
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=show-book-kar
+DB_USER=postgres
+DB_PASSWORD=your_db_password_here
 ```
 
-Note the database name keeps its hyphen, so a `psql` one-liner needs quoting: `psql "postgresql://postgres:...@localhost:5432/show-book-kar"`.
+Two things to watch in the template:
 
-`backend/.env` is ignored by Git; `backend/.env.example` is committed. Never put a real password in the example file.
+- Its `DB_NAME` default is `show_book_kar` (underscores), but this repo creates and documents the database as `show-book-kar` (hyphens). Set `DB_NAME` to whichever name you actually created in pgAdmin. If you settle on the hyphenated name, a `psql` one-liner needs quoting: `psql "postgresql://postgres:...@localhost:5432/show-book-kar"`.
+- Its `FLASK_APP=backend/app.py` points at a file that does not exist yet. Keep it as is if you will create `backend/app.py` in Block 3; otherwise change it to the path of your entry point.
+
+The template also carries `SECRET_KEY`, `HOLD_DURATION_MINUTES` (5) and `CANCELLATION_CUTOFF_HOURS` (2), which the hold and cancellation work will read instead of hard-coded values.
+
+`.env` is ignored by Git; `.env.example` is committed. Never put a real password in the example file.
 
 Install dependencies with:
 
 ```bash
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 ```
 
-`backend/requirements.txt` installs `psycopg` (v3). If the team standardises on `psycopg2` instead, use the root `requirements.txt` and pick one driver - do not install both and import both.
+The root `requirements.txt` installs `psycopg2-binary`, so import it as `psycopg2`. Pick one PostgreSQL driver and stick to it: do not add `psycopg` (v3) or `pg8000` alongside it, and do not import two drivers in the same project.
 
 ---
 
