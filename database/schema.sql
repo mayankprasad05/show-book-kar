@@ -176,12 +176,21 @@ CREATE TABLE bookings (
         )),
     total_amount        NUMERIC(10, 2)  NOT NULL
         CONSTRAINT bookings_amount_check CHECK (total_amount >= 0),
-    created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    CONSTRAINT bookings_user_show_unique UNIQUE (user_id, show_id)
+    created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW()
 );
+
+-- One *active* booking per user per show. A plain UNIQUE (user_id, show_id)
+-- also blocked re-booking after a cancellation or expiry, because the dead
+-- booking row still occupied the pair; the partial index only covers rows that
+-- can still hold seats.
+CREATE UNIQUE INDEX bookings_user_show_active_unique
+    ON bookings (user_id, show_id)
+    WHERE status IN ('PENDING', 'CONFIRMED');
 -- Comment: a booking refers to one show only; the composite FK to show_seats
 -- (see booking_seats) guarantees each booking_seats row belongs to the same
--- show.
+-- show. Uniqueness is enforced by bookings_user_show_active_unique below the
+-- table: at most one PENDING/CONFIRMED booking per (user, show), while
+-- CANCELLED/EXPIRED history can accumulate.
 
 -- ----------------------------------------------------------------------------
 -- booking_seats

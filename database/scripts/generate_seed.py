@@ -8,6 +8,30 @@ import datetime
 
 random.seed(7)
 
+# Demo password for every seeded user: Passw0rd! (bcrypt, rounds=10).
+# The digests are precomputed so seed.sql stays reproducible: bcrypt salts are
+# random, so hashing at generation time would produce a different file each run.
+DEMO_PASSWORD = "Passw0rd!"
+HASHES = [
+    "$2b$10$kpgRcv.StaUaa715h1pWY.scbrNwpQ2Y1gIHSPrEQfX0FdaSjLHdi",
+    "$2b$10$OIRjseFssrW7zPvckFnRRekPmXqez1UbotjhxYNE7Tj6kGixmlS9y",
+    "$2b$10$Wkeh9NiQamqbRVBykHlQEuVbpCw9lTPDLprD9g/WemKjU11Jl.ugi",
+    "$2b$10$FKfoc5QUokSQsh6brUltGujv7XggwBu8r7vPtvt46b/R7N0L7Lphe",
+    "$2b$10$bN/Ed7L.kCJTQqtnL7A4a.ZxwiWwOuUWcFG7hdmFhNtRlj3UvKBe.",
+    "$2b$10$eP9Z0Mlrke0GSlPBssfMvuTRXBzjc6WHcFnBmNOM3V3CwFLwW5C.y",
+    "$2b$10$03/rYj6H/AUCt/2g1/EeAOyUXDpShWf5pVMjO0tR90y2bn0PVwNyO",
+    "$2b$10$5qsXrKwSWWfqW1A2hWBrcO1Sv4ssZi88GfTAxXxPcTLO87gzUPu3u",
+    "$2b$10$M2nys9.30Yw5fR3JJ0Dp6OE0aIgIzn2TgnXHPch4YonvuGzHkj2Rm",
+    "$2b$10$30mZ1oaCl4yQwjM3gbknsuIM6PBp8syntlep069jcGIK8.QReUWlu",
+    "$2b$10$iI1zmYN5MUAnejoGZuNA0u/.xYFgmS39y1jUUyY.mtiQpLIk80SL.",
+    "$2b$10$VfZQUa5s1GTHwrVYJzuyxeY3xXIuckZIRgd//7tEz2i4cdCecIiq.",
+    "$2b$10$WoG58m5vmBtZ/rboHB1WteXA/x/T6hwfPHAXHIZIvV.gdVbMnxYEa",
+    "$2b$10$nc6qnums/uvxMCRXtjmyM.gPao4rK42jHQLvLS.FvOgMqJ1jWf8QO",
+    "$2b$10$Gg9OJwl5arFRFrk8/2991uNaRLoRmvIdjjfBUX7dbUevpt7gYTaEG",
+    "$2b$10$G4mLwszcZbTmRTBazaeqquzGw9I7r4.6G3F1oUAoph4QesDCmTI5a",
+    "$2b$10$AD3xVNiJw3OCu6j5Q4VMLOUpuBc5O3wZSDTMV7tFpNdPH8XVh54Ba",
+]
+
 def future(days_from, hour=10):
     return fmt(datetime.datetime(2026, 12, 15 + days_from, hour, 0))
 
@@ -28,7 +52,8 @@ def _m(v):
 def _mk(rows):
     return "(" + ", ".join(_m(v) for v in rows) + ")"
 
-now_ts = fmt(__import__("datetime").datetime(2026, 12, 25, 12, 0))
+# Catalogue rows exist before anything else happens in the timeline.
+now_ts = fmt(datetime.datetime(2026, 11, 1, 12, 0))
 
 # ---------------- theatres / screens / seats ----------------
 ins_rows = []
@@ -129,7 +154,7 @@ u_id = 0
 for nm, em in CUST + ADMIN:
     u_id += 1
     role = "admin" if em in [a[1] for a in ADMIN] else "customer"
-    USR.append((u_id, em, f"hash_{u_id}", nm, role, now_ts))
+    USR.append((u_id, em, HASHES[u_id - 1], nm, role, now_ts))
 ins("users", USR)
 
 def seats_of_show(show):
@@ -156,12 +181,12 @@ for i in range(5):
         uid = (i % len(CUST)) + 1
         n = 1 if i % 2 == 0 else 2
         bk_status, seat_status = "CONFIRMED", "BOOKED"
-        created = fmt(datetime.datetime(2026, 12, 13, 18, 30))
+        created = fmt(datetime.datetime(2026, 11, 20, 18, 30))
     else:
         uid = 5
         n = 1
         bk_status, seat_status = "PENDING", "HELD"
-        created = fmt(datetime.datetime(2026, 12, 20, 18, 30))
+        created = fmt(datetime.datetime(2026, 11, 22, 11, 30))
 
     chosen = avail[:n]
     b_id += 1
@@ -172,7 +197,10 @@ for i in range(5):
         state[(show_id, seat_id_val)] = (
             seat_status,
             b_id,
-            future(days_from=1) if seat_status == "HELD" else None,
+            # A seeded live hold stays valid until 5 minutes before its show.
+            # It is deliberately long-lived so the demo can pay for it, and a
+            # separate expired row can be created when testing release-expired.
+            fmt(show[3] - datetime.timedelta(minutes=5)) if seat_status == "HELD" else None,
         )
 ins("bookings", BK)
 
@@ -196,7 +224,7 @@ for b in BK:
         continue
     p_id += 1
     PAY.append((p_id, b[0], b[4], "SUCCESS", f"txn_{b[0]:04d}",
-                fmt(datetime.datetime(2026, 12, 14, 19, 0))))
+                fmt(datetime.datetime(2026, 11, 20, 19, 0))))
 ins("payments", PAY)
 
 # ---------------- refunds (a separate record, never over the paid amount) ----------
@@ -207,7 +235,7 @@ if PAY:
     REF.append((1, payment[0], booking[0],
                 round(float(payment[2]) * 0.4, 2), "REQUESTED",
                 "Customer requested refund",
-                fmt(datetime.datetime(2026, 12, 20, 10, 0))))
+                fmt(datetime.datetime(2026, 11, 24, 10, 0))))
 ins("refunds", REF)
 
 # ---------------- emit ----------------
@@ -216,6 +244,7 @@ def q(table, rows):
 
 lines = ["-- ============================================================================",
          "-- Show-book-kar seed data (deterministic, random seed=7)",
+         "-- Every seeded user shares the demo password: Passw0rd! (bcrypt)",
          "-- Owner: M | Reviewer: H, S",
          "-- ============================================================================",
          ""]

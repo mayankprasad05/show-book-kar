@@ -27,6 +27,7 @@ show-book-kar/
 ├── requirements.txt              Python dependencies for the project
 ├── database/
 │   ├── schema.sql                11 tables, named constraints, indexes section
+│   ├── functions.sql             hold/release functions (the write path)
 │   ├── seed.sql                  deterministic sample data (regenerated, do not hand-edit)
 │   ├── queries.sql               read queries used by the API/UI
 │   ├── views.sql                 availability and booking-history views
@@ -53,7 +54,7 @@ show-book-kar/
 
 `.env.example` and `requirements.txt` at the repository root are the only configuration templates: use them for the backend (section 8).
 
-There is no `backend/` directory yet: `backend/app.py`, `backend/db.py`, `backend/routes/` and `frontend/` arrive in Block 3 of the plan once the schema is frozen, which it now is. Create `backend/` when you add the first Python file; the env file and dependency list stay at the repository root, as the templates expect.
+`backend/` exists and is complete: `app.py` (app factory + error handlers), `db.py` (psycopg2 connection and transactions), `auth.py` (bcrypt + session), `errors.py` (SQLSTATE/signal -> HTTP mapping), `validators.py` (request parsing), `routes/` (health, catalog, auth, bookings, admin, reports) and `tests/` (pytest, 74 tests). `backend/README.md` is the API + database contract the frontend builds against. The env file and dependency list stay at the repository root, as the templates expect; `frontend/` is S's part.
 
 ---
 
@@ -67,8 +68,8 @@ There is no `backend/` directory yet: `backend/app.py`, `backend/db.py`, `backen
 | `database/tests/test_*.sql` | Negative and behaviour tests | Each one deliberately violates one rule and must fail with a specific SQLSTATE, proving the constraint is real. |
 | `database/tests/README.md` | Test index and run instructions | Explains that a pass means a *non-zero exit* plus the *expected SQLSTATE*. |
 | `database/tests/test_concurrency.md` | Two-session race procedure | Evidence script for the row-locking demo. |
-| `backend/.env.example` | Backend config template | `DATABASE_URL` style configuration for `db.py`. Contains no secrets. |
-| `backend/requirements.txt` | Backend dependency list | Flask plus a PostgreSQL driver (`psycopg` 3, with `psycopg2-binary` and `pg8000` alternatives commented in). |
+| ~~`backend/.env.example`~~ | Removed | Superseded by the root `.env.example`. The backend reads the same flat `DB_*` variables; do not recreate a second template. |
+| ~~`backend/requirements.txt`~~ | Removed | The root `requirements.txt` is the only dependency list and it pins `psycopg2-binary`. Do not introduce `psycopg` v3 or `pg8000` alongside it. |
 | `.env.example` (root) | Flat env template | Alternative host/port/user/password configuration used by the plan's Phase 0 checklist. |
 | `requirements.txt` (root) | Full dependency list | Flask, Flask-Cors, psycopg2-binary, python-dotenv, bcrypt, python-dateutil, pytest, requests, waitress. |
 | `.gitignore` | Ignore rules | Keeps `.env`, caches, virtualenvs, database dumps and logs out of Git. |
@@ -110,8 +111,8 @@ There is no `backend/` directory yet: `backend/app.py`, `backend/db.py`, `backen
 
 Two caveats, so nobody trips over them later:
 
-- Seeded `users.password_hash` values are placeholders (`hash_1` ... `hash_17`), **not** real bcrypt hashes. Password hashing arrives with the auth work in Block 7; do not try to log in with them.
-- Seeded shows run on 2-4 December 2026 and `created_at` values are in December 2026, which are *ahead* of the current date. Queries that filter "future shows" will still work, but keep it in mind when comparing timestamps in a demo.
+- Every seeded user shares the demo password **`Passw0rd!`**, stored as a real bcrypt digest (rounds=10). `alice@example.com` is a customer and `admin1@example.com` is an admin. The digests are precomputed in `generate_seed.py` so regenerating the file stays byte-for-byte reproducible.
+- The seeded timeline is now coherent: catalogue rows created 1 November 2026, all five bookings on 20-22 November 2026, shows on 2-4 December 2026, payments 20 November, the refund 24 November. Every booking therefore sits 10-12 days before its show, so a cancellation-cutoff rule can be exercised. The one seeded `HELD` seat expires five minutes before its show starts (3 December 09:55), so the demo can still pay for that booking; create a separate row if you need to demonstrate `release-expired-holds`.
 
 ---
 
@@ -159,6 +160,11 @@ You should see `booking_seats`, `bookings`, `movies`, `payments`, `refunds`, `sc
 1. In the same Query Tool, click **Open File** again.
 2. Select `database/seed.sql`.
 3. Press **F5**.
+
+Before the seed, load `database/functions.sql` the same way (Open File -> F5). It
+creates `fn_hold_seats`, `fn_release_expired_holds` and `fn_pending_holds`, which
+the backend calls for holds; the schema alone is not enough to run the write path.
+Order matters: schema, then functions, then seed.
 
 The file contains one multi-row `INSERT` per table plus a final `DO` block. A clean run raises no error. pgAdmin's Query Tool runs each statement in autocommit mode, so a successful run is already committed; there is no separate "save" step.
 
@@ -317,7 +323,8 @@ Run them against a scratch database, not the demo database, since a failed trans
 |---|---|
 | `database/DESIGN_NOTE.md` | Entities, relationships, keys, status values and the agreed business rules (5-minute hold, cancellation cutoff, failed-payment release). Frozen for the first integration pass. |
 | `database/TRANSACTION.md` | The hold/booking transaction: locking order, rollback conditions, why `show_seats` exists. |
-| `database/queries.sql` | Read queries behind the API and UI, including empty-result behaviour. |
+| `database/queries.sql` | Read queries behind the API and UI, including empty-result behaviour, plus the three admin report queries. |
+| `database/functions.sql` | The write path: hold, pay, cancel, release-expired and show scheduling, with their signal messages. |
 | `database/views.sql` | Availability and booking-history views. |
 | `database/indexes.sql` | Indexes with the query pattern and `EXPLAIN` evidence that justifies each one. |
 | `database/ER Diagram.png` | The ER diagram. |
@@ -344,8 +351,9 @@ Run them against a scratch database, not the demo database, since a failed trans
 
 ## 12. Next steps
 
-Order of work is in `workplan.md`. The immediate next items:
+Order of work is in `workplan.md`. H's backend is finished; what remains is:
 
-1. Flask skeleton: `backend/app.py`, `backend/db.py` reading `DATABASE_URL`, health endpoint that proves connectivity.
-2. Read-only API: `GET /api/movies`, `/api/movies/<id>`, `/api/shows`, `/api/shows/<id>/seats` backed by `database/queries.sql`.
-3. Frontend movie list, movie detail and seat map driven entirely by those endpoints.
+1. **M**: review or replace `database/functions.sql` (H wrote the reference implementation), and decide on the two outstanding schema items in `backend/README.md` section 8 - an exclusion constraint on `shows` and a primary key for `booking_seats`.
+2. **M**: replace the `database/tests/*.sql` stubs; the behaviours they describe are currently covered by `backend/tests/`.
+3. **S**: frontend against `backend/README.md` - movie list, movie detail, seat map with legend, hold -> pay, booking history, cancel, and the admin screens.
+4. Run the join demo from a clean database (sections 5-6), with the API on port 5000 and `.venv/Scripts/python -m pytest backend/tests -q` as the regression check.

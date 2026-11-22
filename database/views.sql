@@ -47,21 +47,14 @@ SELECT b.id              AS booking_id,
        b.status          AS booking_status,
        b.total_amount    AS booking_total_amount,
        b.created_at      AS booking_created_at,
-       s.id              AS seat_id,
-       s.row_label       AS seat_row_label,
-       s.seat_number     AS seat_number,
+       st.id             AS seat_id,
+       st.row_label      AS seat_row_label,
+       st.seat_number    AS seat_number,
        ss.status         AS seat_status,
-       ss.price          AS seat_price_at_booking
+       bs.price          AS seat_price_at_booking
 FROM bookings b
-JOIN shows s ON s.id = b.show_id
+JOIN shows sh ON sh.id = b.show_id
 LEFT JOIN booking_seats bs ON bs.booking_id = b.id
-LEFT JOIN seats s ON s.id = bs.seat_id
-                    AND s.screen_id = (
-                        SELECT sc.id
-                        FROM screens sc
-                        WHERE sc.id = (SELECT sc2.id FROM screens sc2 JOIN shows sh2 ON sh2.screen_id = sc2.id WHERE sh2.id = b.show_id)
-                    )
-                    -- The join above is simplified; the route-level query
-                    -- materialises seats with their screen to avoid the
-                    -- sub-select. It is documented here for completeness.
+LEFT JOIN show_seats ss ON ss.show_id = bs.show_id AND ss.seat_id = bs.seat_id
+LEFT JOIN seats st ON st.id = bs.seat_id
 ORDER BY b.created_at DESC;
