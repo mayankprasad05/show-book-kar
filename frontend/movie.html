@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Movie · Show-book-kar</title>
+  <link rel="stylesheet" href="static/css/app.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header id="app-header" class="site-header"></header>
+
+  <main id="main" class="page">
+    <a class="back-link" href="index.html">&larr; All movies</a>
+    <div id="movie-root" aria-live="polite">
+      <div class="state"><p>Loading movie&hellip;</p></div>
+    </div>
+  </main>
+
+  <footer id="app-footer"></footer>
+  <div id="toasts" class="toast-stack" aria-live="polite"></div>
+
+  <script type="module" src="static/js/pages/movie.js"></script>
+</body>
+</html>

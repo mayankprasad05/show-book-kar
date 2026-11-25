@@ -18,7 +18,7 @@ ENV/
 # ---------------------------------------------------------------------------
 # Environment variables and secrets
 # ---------------------------------------------------------------------------
-# Keep committed templates (backend/.env.example, .env.example); ignore the rest.
+# Keep the committed template (.env.example); ignore the rest.
 .env
 .env.*
 !.env.example

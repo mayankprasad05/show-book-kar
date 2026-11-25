@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Choose seats · Show-book-kar</title>
+  <link rel="stylesheet" href="static/css/app.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header id="app-header" class="site-header"></header>
+
+  <main id="main" class="page">
+    <a id="back-link" class="back-link" href="index.html">&larr; Back</a>
+
+    <div id="show-root" aria-live="polite">
+      <div class="state"><p>Loading show&hellip;</p></div>
+    </div>
+
+    <div id="seat-alert" class="alert" role="alert" hidden></div>
+
+    <div class="seat-layout">
+      <section class="card seat-panel" aria-labelledby="seatmap-heading">
+        <div class="section-head">
+          <h2 id="seatmap-heading">Choose your seats</h2>
+          <span id="seat-counts" class="muted small"></span>
+        </div>
+
+        <div class="screen" aria-hidden="true">
+          <div class="screen-bar"></div>
+          <span>SCREEN</span>
+        </div>
+
+        <ul class="legend" aria-label="Seat legend">
+          <li><span class="legend-swatch"></span> Available</li>
+          <li><span class="legend-swatch legend-swatch--selected"></span> Selected</li>
+          <li><span class="legend-swatch legend-swatch--held"></span> Held (5 min)</li>
+          <li><span class="legend-swatch legend-swatch--booked"></span> Booked</li>
+        </ul>
+
+        <div class="seat-map-scroll">
+          <div id="seat-map" class="seat-map" aria-live="polite">
+            <p class="muted small">Loading seats&hellip;</p>
+          </div>
+        </div>
+        <p class="note" style="text-align:center;margin-top:10px">
+          Seats marked <strong>VIP</strong> have a gold outline. Availability always comes from the database &mdash;
+          this view is only a display aid.
+        </p>
+      </section>
+
+      <aside class="card summary" aria-labelledby="summary-heading">
+        <h2 id="summary-heading">Your selection</h2>
+
+        <div id="summary-seats" class="chips">
+          <p class="muted small">No seats selected.</p>
+        </div>
+
+        <dl class="summary-totals">
+          <div>
+            <dt>Seats</dt>
+            <dd id="summary-count">0</dd>
+          </div>
+          <div>
+            <dt>Provisional total</dt>
+            <dd id="summary-total">&#8377;0.00</dd>
+          </div>
+        </dl>
+
+        <p class="note">
+          The server confirms the final amount when the hold is created. Up to
+          10 seats per booking.
+        </p>
+
+        <button id="hold-button" class="btn btn--primary btn--block" type="button" disabled>
+          Continue to checkout
+        </button>
+
+        <p class="note">Holds last 5 minutes. Signing in is required to continue.</p>
+      </aside>
+    </div>
+  </main>
+
+  <footer id="app-footer"></footer>
+  <div id="toasts" class="toast-stack" aria-live="polite"></div>
+
+  <script type="module" src="static/js/pages/seats.js"></script>
+</body>
+</html>

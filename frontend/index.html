@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Movies · Show-book-kar</title>
+  <meta name="description" content="Browse movies, choose a showtime and reserve seats." />
+  <link rel="stylesheet" href="static/css/app.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header id="app-header" class="site-header"></header>
+
+  <main id="main" class="page">
+    <section class="hero">
+      <p class="eyebrow">Now showing</p>
+      <h1>Pick a movie.<br /><span class="accent-text">We&rsquo;ll hold the seats.</span></h1>
+      <p class="lede">
+        Browse the catalogue, choose a showtime and reserve up to 10 seats. Each hold lasts
+        five minutes while you complete a simulated payment &mdash; the database decides
+        whether a seat is really free.
+      </p>
+      <div class="hero-points">
+        <span class="hero-point">Database-backed seat map</span>
+        <span class="hero-point">All-or-nothing holds</span>
+        <span class="hero-point">Simulated checkout</span>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="movies-heading">
+      <div class="section-head">
+        <h2 id="movies-heading">Movies</h2>
+        <span id="movie-count" class="muted small"></span>
+      </div>
+      <div id="movie-grid" class="movie-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer id="app-footer"></footer>
+  <div id="toasts" class="toast-stack" aria-live="polite"></div>
+
+  <script type="module" src="static/js/pages/movies.js"></script>
+</body>
+</html>

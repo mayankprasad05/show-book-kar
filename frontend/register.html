@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create account · Show-book-kar</title>
+  <link rel="stylesheet" href="static/css/app.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header id="app-header" class="site-header"></header>
+
+  <main id="main" class="page">
+    <div class="auth-wrap">
+      <div class="card auth-card">
+        <p class="eyebrow">Join the show</p>
+        <h1>Create account</h1>
+        <p class="muted">New accounts are customers. Admin access is assigned in the seed data.</p>
+
+        <div id="auth-alert" class="alert" role="alert" hidden></div>
+
+        <form id="auth-form" class="stack" novalidate>
+          <div class="field">
+            <label for="name">Full name</label>
+            <input id="name" name="name" type="text" autocomplete="name" maxlength="200" required />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="new-password" minlength="8" required />
+          </div>
+          <div class="field">
+            <label for="confirm">Confirm password</label>
+            <input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="8" required />
+          </div>
+          <button id="auth-submit" class="btn btn--primary btn--block" type="submit">Create account</button>
+        </form>
+
+        <p class="auth-alt">Already registered? <a href="login.html">Sign in</a></p>
+      </div>
+    </div>
+  </main>
+
+  <footer id="app-footer"></footer>
+  <div id="toasts" class="toast-stack" aria-live="polite"></div>
+
+  <script type="module" src="static/js/pages/register.js"></script>
+</body>
+</html>

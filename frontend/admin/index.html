@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin · Show-book-kar</title>
+  <link rel="stylesheet" href="../static/css/app.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header id="app-header" class="site-header"></header>
+
+  <main id="main" class="page">
+    <div class="section-head admin-head">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Operations</h1>
+      </div>
+      <span id="admin-user" class="muted small"></span>
+    </div>
+
+    <div id="admin-denied" class="state state--error" hidden></div>
+
+    <div id="admin-app" hidden>
+      <nav class="tabs" role="tablist" aria-label="Admin sections">
+        <button class="tab" id="tab-overview-btn" type="button" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+        <button class="tab" id="tab-movies-btn" type="button" role="tab" data-tab="movies" aria-selected="false">Movies</button>
+        <button class="tab" id="tab-theatres-btn" type="button" role="tab" data-tab="theatres" aria-selected="false">Theatres</button>
+        <button class="tab" id="tab-screens-btn" type="button" role="tab" data-tab="screens" aria-selected="false">Screens &amp; seats</button>
+        <button class="tab" id="tab-shows-btn" type="button" role="tab" data-tab="shows" aria-selected="false">Shows</button>
+      </nav>
+
+      <!-- Overview: reports -->
+      <section id="tab-overview" class="tab-panel" role="tabpanel" aria-labelledby="tab-overview-btn">
+        <form id="report-form" class="toolbar">
+          <div class="field">
+            <label for="report-from">From</label>
+            <input id="report-from" type="date" />
+          </div>
+          <div class="field">
+            <label for="report-to">To</label>
+            <input id="report-to" type="date" />
+          </div>
+          <button class="btn btn--secondary" type="submit">Apply range</button>
+          <button class="btn btn--ghost" id="report-reset" type="button">Reset</button>
+        </form>
+
+        <div id="report-alert" class="alert" role="alert" hidden></div>
+
+        <div class="stat-grid">
+          <div class="stat">
+            <span class="stat-label">Gross successful payments</span>
+            <strong id="stat-gross">—</strong>
+            <span class="stat-note" id="stat-gross-note">All time</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Refunds</span>
+            <strong id="stat-refunds">—</strong>
+            <span class="stat-note" id="stat-refund-note">Requested + approved</span>
+          </div>
+          <div class="stat stat--accent">
+            <span class="stat-label">Net cash flow</span>
+            <strong id="stat-net">—</strong>
+            <span class="stat-note">Gross minus refunds</span>
+          </div>
+        </div>
+
+        <div class="split">
+          <section class="card">
+            <div class="section-head">
+              <h2>Occupancy by show</h2>
+              <span id="occupancy-count" class="muted small"></span>
+            </div>
+            <div id="occupancy-table" class="table-wrap"></div>
+          </section>
+
+          <section class="card">
+            <div class="section-head">
+              <h2>Top movies</h2>
+              <span class="muted small">Confirmed bookings only</span>
+            </div>
+            <div id="topmovies-table" class="table-wrap"></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- Movies -->
+      <section id="tab-movies" class="tab-panel" role="tabpanel" aria-labelledby="tab-movies-btn" hidden>
+        <section class="card">
+          <div class="section-head">
+            <h2 id="movie-form-title">Add a movie</h2>
+            <button class="btn btn--ghost btn--sm" id="movie-cancel" type="button" hidden>Cancel edit</button>
+          </div>
+          <div id="movie-alert" class="alert" role="alert" hidden></div>
+          <form id="movie-form" class="form-grid" novalidate>
+            <div class="field">
+              <label for="movie-title">Title</label>
+              <input id="movie-title" name="title" type="text" maxlength="200" required />
+            </div>
+            <div class="field">
+              <label for="movie-language">Language</label>
+              <input id="movie-language" name="language" type="text" maxlength="40" value="English" />
+            </div>
+            <div class="field">
+              <label for="movie-duration">Duration (minutes)</label>
+              <input id="movie-duration" name="duration_minutes" type="number" min="1" step="1" required />
+            </div>
+            <div class="field field--actions">
+              <button id="movie-submit" class="btn btn--primary" type="submit">Add movie</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Catalogue</h2>
+            <span id="admin-movie-count" class="muted small"></span>
+          </div>
+          <div id="admin-movies-table" class="table-wrap"></div>
+        </section>
+      </section>
+
+      <!-- Theatres -->
+      <section id="tab-theatres" class="tab-panel" role="tabpanel" aria-labelledby="tab-theatres-btn" hidden>
+        <section class="card">
+          <div class="section-head"><h2>Add a theatre</h2></div>
+          <div id="theatre-alert" class="alert" role="alert" hidden></div>
+          <form id="theatre-form" class="form-grid" novalidate>
+            <div class="field">
+              <label for="theatre-name">Name</label>
+              <input id="theatre-name" name="name" type="text" maxlength="200" required />
+            </div>
+            <div class="field">
+              <label for="theatre-city">City</label>
+              <input id="theatre-city" name="city" type="text" maxlength="80" required />
+            </div>
+            <div class="field field--actions">
+              <button id="theatre-submit" class="btn btn--primary" type="submit">Add theatre</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Theatres</h2>
+            <span id="admin-theatre-count" class="muted small"></span>
+          </div>
+          <div id="admin-theatres-table" class="table-wrap"></div>
+        </section>
+      </section>
+
+      <!-- Screens and seats -->
+      <section id="tab-screens" class="tab-panel" role="tabpanel" aria-labelledby="tab-screens-btn" hidden>
+        <section class="card">
+          <div class="section-head"><h2>Add a screen</h2></div>
+          <div id="screen-alert" class="alert" role="alert" hidden></div>
+          <form id="screen-form" class="form-grid" novalidate>
+            <div class="field">
+              <label for="screen-theatre">Theatre</label>
+              <select id="screen-theatre" required></select>
+            </div>
+            <div class="field">
+              <label for="screen-name">Screen name</label>
+              <input id="screen-name" type="text" maxlength="80" placeholder="Screen 1" required />
+            </div>
+            <div class="field">
+              <label for="screen-capacity">Capacity</label>
+              <input id="screen-capacity" type="number" min="1" step="1" required />
+            </div>
+            <div class="field field--actions">
+              <button id="screen-submit" class="btn btn--primary" type="submit">Add screen</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Screens</h2>
+            <span id="admin-screen-count" class="muted small"></span>
+          </div>
+          <div id="admin-screens-table" class="table-wrap"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Seat layout</h2>
+            <span class="muted small">Add seats in bulk to an existing screen</span>
+          </div>
+          <div id="seats-alert" class="alert" role="alert" hidden></div>
+          <div class="form-grid" style="margin-bottom:16px">
+            <div class="field">
+              <label for="seat-screen">Screen</label>
+              <select id="seat-screen"></select>
+            </div>
+          </div>
+
+          <div id="seat-rows" class="seat-builder"></div>
+          <button class="btn btn--ghost btn--sm" id="seat-add-row" type="button" style="margin-top:12px">+ Add row</button>
+
+          <div style="margin-top:18px">
+            <button class="btn btn--primary" id="seat-submit" type="button">Create seats</button>
+          </div>
+          <p class="note" style="margin-top:10px">
+            Seat numbers restart at 1 in each row. The screen's capacity caps the layout.
+          </p>
+        </section>
+      </section>
+
+      <!-- Shows -->
+      <section id="tab-shows" class="tab-panel" role="tabpanel" aria-labelledby="tab-shows-btn" hidden>
+        <section class="card">
+          <div class="section-head"><h2>Schedule a show</h2></div>
+          <div id="show-alert" class="alert" role="alert" hidden></div>
+          <form id="show-form" class="form-grid" novalidate>
+            <div class="field">
+              <label for="show-movie">Movie</label>
+              <select id="show-movie" required></select>
+            </div>
+            <div class="field">
+              <label for="show-screen">Screen</label>
+              <select id="show-screen" required></select>
+            </div>
+            <div class="field">
+              <label for="show-start">Start (local time)</label>
+              <input id="show-start" type="datetime-local" required />
+            </div>
+            <div class="field">
+              <label for="show-end">End (local time)</label>
+              <input id="show-end" type="datetime-local" required />
+            </div>
+            <div class="field">
+              <label for="show-price">Base price</label>
+              <input id="show-price" type="number" min="0" step="0.01" required />
+            </div>
+            <div class="field field--actions">
+              <button id="show-submit" class="btn btn--primary" type="submit">Schedule show</button>
+            </div>
+          </form>
+          <p class="note" style="margin-top:10px">
+            Scheduling creates one seat row per seat on the screen. Overlaps on the same screen
+            are rejected by the database.
+          </p>
+        </section>
+
+        <section class="card">
+          <div class="section-head">
+            <h2>Shows</h2>
+            <span id="admin-show-count" class="muted small"></span>
+          </div>
+          <form id="shows-filter" class="toolbar" style="margin-bottom:14px">
+            <div class="field">
+              <label for="shows-date">Filter by date</label>
+              <input id="shows-date" type="date" />
+            </div>
+            <button class="btn btn--secondary" type="submit">Apply</button>
+            <button class="btn btn--ghost" id="shows-clear" type="button">Clear</button>
+          </form>
+          <div id="admin-shows-table" class="table-wrap"></div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer id="app-footer"></footer>
+  <div id="toasts" class="toast-stack" aria-live="polite"></div>
+
+  <script type="module" src="../static/js/pages/admin.js"></script>
+</body>
+</html>

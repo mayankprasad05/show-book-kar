@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My bookings · Show-book-kar</title>
+  <link rel="stylesheet" href="static/css/app.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header id="app-header" class="site-header"></header>
+
+  <main id="main" class="page">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Your account</p>
+        <h1>My bookings</h1>
+      </div>
+      <span id="bookings-count" class="muted small"></span>
+    </div>
+
+    <div id="bookings-root" aria-live="polite">
+      <div class="state"><p>Loading your bookings&hellip;</p></div>
+    </div>
+  </main>
+
+  <footer id="app-footer"></footer>
+  <div id="toasts" class="toast-stack" aria-live="polite"></div>
+
+  <script type="module" src="static/js/pages/bookings.js"></script>
+</body>
+</html>
